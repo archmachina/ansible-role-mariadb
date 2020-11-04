@@ -1,0 +1,77 @@
+---
+
+- name: Check for variable definitions
+  when: vars[item] is undefined
+  fail:
+    msg: "{{ item }} is undefined and required for configuration"
+  loop:
+    - "mariadb_clus_nets"
+    - "mariadb_clus_name"
+    - "mariadb_clus_addresses"
+    - "mariadb_node_address"
+    - "mariadb_node_name"
+
+########
+# Cluster firewall configuration
+
+- name: Add DB firewall ports (3306)
+  iptables:
+    action: append
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    source: "{{ item }}"
+    destination_port: 3306
+  with_items: "{{ mariadb_clus_nets }}"
+
+- name: Add DB firewall ports (4444)
+  iptables:
+    action: append
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    source: "{{ item }}"
+    destination_port: 4444
+  with_items: "{{ mariadb_clus_nets }}"
+
+- name: Add DB firewall ports (4567)
+  iptables:
+    action: append
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    source: "{{ item }}"
+    destination_port: 4567
+  with_items: "{{ mariadb_clus_nets }}"
+
+- name: Add DB firewall ports (4568)
+  iptables:
+    action: append
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    source: "{{ item }}"
+    destination_port: 4568
+  with_items: "{{ mariadb_clus_nets }}"
+
+########
+# Cluster configuration
+
+- name: Database configuration
+  template:
+    src: dbcluster.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/dbcluster.cnf
+    owner: root
+    group: root
+    mode: 0644
+  register: db_config
+
+########
+# Flag to restart database
+
+- name: Set flag to restart database
+  when: db_config.changed
+  set_fact:
+    mariadb_service_state: "restarted"
+
+...

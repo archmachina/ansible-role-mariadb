@@ -1,0 +1,117 @@
+---
+
+- name: Distribution check
+  when: ansible_distribution != "Ubuntu"
+  fail:
+    msg: "db role only supported on Ubuntu platform."
+
+- name: Check for variable definitions
+  when: vars[item] is undefined
+  fail:
+    msg: "{{ item }} is undefined and required for configuration"
+  loop:
+    - "mariadb_client_nets"
+
+- name: Set default service state
+  set_fact:
+    mariadb_service_state: "started"
+
+########
+# Firewall configuration
+
+- name: Add DB firewall ports (3306)
+  iptables:
+    action: append
+    chain: INPUT
+    jump: ACCEPT
+    protocol: tcp
+    source: "{{ item }}"
+    destination_port: 3306
+  with_items: "{{ mariadb_client_nets }}"
+
+########
+# Package configuration
+
+- name: Import MariaDB keys
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  loop:
+    - "https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY"
+    - "https://downloads.mariadb.com/MaxScale/MariaDB-MaxScale-GPG-KEY"
+    - "https://downloads.mariadb.com/Tools/MariaDB-Enterprise-GPG-KEY"
+
+- name: Import MariaDB keys
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+  loop:
+    - F1656F24C74CD1D8
+    - 8167EE24
+    - E3C94F49
+    - cbcb082a1bb943db
+    - 135659e928c12247
+
+- name: Add MariaDB repository
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+  loop:
+    - "deb http://downloads.mariadb.com/MariaDB/mariadb-10.4.8/repo/ubuntu {{ ansible_distribution_release }} main"
+    - "deb http://downloads.mariadb.com/Tools/ubuntu {{ ansible_distribution_release }} main"
+
+- name: Force update of Apt cache
+  apt:
+    update_cache: yes
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install MariaDB packages
+  apt:
+    name:
+      - mariadb-client
+      - mariadb-server
+    state: present
+
+########
+# Ensure the relevant directory is present
+
+- name: Stat /var/lib/mysql
+  stat:
+    path: /var/lib/mysql
+  register: stat_lib_mysql
+
+- name: Stat /usr/lib/mysql
+  when: stat_lib_mysql is undefined or
+    stat_lib_mysql.stat is undefined or stat_lib_mysql.stat.exists == false
+  fail:
+    msg: "Could not stat /var/lib/mysql"
+
+- name: Check state of /usr/lib/mysql
+  when: stat_lib_mysql.stat.isdir == false or stat_lib_mysql.stat.islnk == true
+  fail:
+    msg: "/var/lib/mysql must be a directory"
+
+########
+# Cluster Configuration
+
+- name: Cluster configuration
+  when: mariadb_clus_name is defined
+  include_tasks: "cluster.yml"
+
+########
+# Save the firewall rules
+
+- name: Save firewall rules
+  include_tasks: "{{ playbook_dir }}/lib/firewall-save.yml"
+
+########
+# Service Status
+
+- name: Enable MariaDB Services
+  service:
+    name: mariadb
+    state: "{{ mariadb_service_state }}"
+    enabled: true
+
+...
