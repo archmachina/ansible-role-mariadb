@@ -5,17 +5,6 @@
   fail:
     msg: "db role only supported on Ubuntu platform."
 
-- name: Check for variable definitions
-  when: vars[item] is undefined
-  fail:
-    msg: "{{ item }} is undefined and required for configuration"
-  loop:
-    - "mariadb_client_nets"
-
-- name: Set default service state
-  set_fact:
-    mariadb_service_state: "started"
-
 ########
 # Firewall configuration
 
@@ -96,7 +85,7 @@
 # Cluster Configuration
 
 - name: Cluster configuration
-  when: mariadb_clus_name is defined
+  when: mariadb_cluster_name is defined
   include_tasks: "cluster.yml"
 
 ########
@@ -112,6 +101,6 @@
   service:
     name: mariadb
     state: "{{ mariadb_service_state }}"
-    enabled: true
+    enabled: "{{ mariadb_service_enabled }}"
 
 ...

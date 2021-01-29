@@ -1,0 +1,11 @@
+---
+
+mariadb_service_state: "started"
+mariadb_client_nets:
+  - "127.0.0.0/8"
+mariadb_service_enabled: true
+mariadb_node_address: "{{ ansible_facts.default_ipv4.address }}"
+mariadb_node_name: "{{ ansible_facts.ansible_hostname }}"
+mariadb_bind_address: "0.0.0.0"
+
+...

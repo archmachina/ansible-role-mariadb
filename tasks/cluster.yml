@@ -5,11 +5,8 @@
   fail:
     msg: "{{ item }} is undefined and required for configuration"
   loop:
-    - "mariadb_clus_nets"
-    - "mariadb_clus_name"
-    - "mariadb_clus_addresses"
-    - "mariadb_node_address"
-    - "mariadb_node_name"
+    - "mariadb_cluster_nets"
+    - "mariadb_cluster_name"
 
 ########
 # Cluster firewall configuration
@@ -22,7 +19,7 @@
     protocol: tcp
     source: "{{ item }}"
     destination_port: 3306
-  with_items: "{{ mariadb_clus_nets }}"
+  with_items: "{{ mariadb_cluster_nets }}"
 
 - name: Add DB firewall ports (4444)
   iptables:
@@ -32,7 +29,7 @@
     protocol: tcp
     source: "{{ item }}"
     destination_port: 4444
-  with_items: "{{ mariadb_clus_nets }}"
+  with_items: "{{ mariadb_cluster_nets }}"
 
 - name: Add DB firewall ports (4567)
   iptables:
@@ -42,7 +39,7 @@
     protocol: tcp
     source: "{{ item }}"
     destination_port: 4567
-  with_items: "{{ mariadb_clus_nets }}"
+  with_items: "{{ mariadb_cluster_nets }}"
 
 - name: Add DB firewall ports (4568)
   iptables:
@@ -52,7 +49,7 @@
     protocol: tcp
     source: "{{ item }}"
     destination_port: 4568
-  with_items: "{{ mariadb_clus_nets }}"
+  with_items: "{{ mariadb_cluster_nets }}"
 
 ########
 # Cluster configuration

@@ -3,7 +3,7 @@
 binlog_format=ROW
 default-storage-engine=innodb
 innodb_autoinc_lock_mode=2
-bind-address=0.0.0.0
+bind-address={{ mariadb_bind_address }}
 
 # Galera Provider Configuration
 wsrep_on=ON
@@ -11,7 +11,11 @@ wsrep_provider=/usr/lib/galera/libgalera_smm.so
 
 # Galera Cluster Configuration
 wsrep_cluster_name="{{ mariadb_clus_name }}"
-wsrep_cluster_address="gcomm://{{ mariadb_clus_addresses }}"
+{% if mariadb_cluster_addresses is defined %}
+wsrep_cluster_address="gcomm://{{ mariadb_cluster_addresses }}"
+{% else %}
+wsrep_cluster_address="gcomm://{% for server in play_hosts %}{{ hostvars[server].ansible_facts.default_ipv4.address }}{{ "," if not loop.last }}{% endfor %}"
+{% endif %}
 
 # Galera Synchronization Configuration
 wsrep_sst_method=rsync
