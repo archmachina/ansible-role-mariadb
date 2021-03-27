@@ -63,10 +63,14 @@
 ########
 # Flag to restart database
 
-- name: Set flag to restart database
+- name: Restart instances
   when: db_config.changed
-  set_fact:
-    mariadb_service_state: "restarted"
+  throttle: 1
+  service:
+    name: mariadb
+    state: "restarted"
+    enabled: "{{ mariadb_service_enabled }}"
+  ignore_errors: yes
 
 # Make sure the services are started, if possible
 - name: Enable MariaDB Services
@@ -110,19 +114,6 @@
   service:
     name: mariadb
     state: "started"
-    enabled: "{{ mariadb_service_enabled }}"
-  loop_control:
-    pause: 10
-  loop: "{{ play_hosts }}"
-  delegate_to: "{{ item }}"
-  delegate_facts: true
-  run_once: true
-
-# Restart services, if required
-- name: Enable MariaDB Services
-  service:
-    name: mariadb
-    state: "{{ mariadb_service_state }}"
     enabled: "{{ mariadb_service_enabled }}"
   loop_control:
     pause: 10
