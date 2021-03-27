@@ -1,0 +1,9 @@
+---
+
+- name: Configure MariaDB service
+  service:
+    name: mariadb
+    state: "started"
+    enabled: true
+
+...

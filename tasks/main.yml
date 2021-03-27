@@ -29,6 +29,7 @@
     - "https://downloads.mariadb.com/MariaDB/MariaDB-Server-GPG-KEY"
     - "https://downloads.mariadb.com/MaxScale/MariaDB-MaxScale-GPG-KEY"
     - "https://downloads.mariadb.com/Tools/MariaDB-Enterprise-GPG-KEY"
+    - "https://mariadb.org/mariadb_release_signing_key.asc"
 
 - name: Import MariaDB keys
   apt_key:
@@ -46,7 +47,7 @@
     repo: "{{ item }}"
     state: present
   loop:
-    - "deb http://downloads.mariadb.com/MariaDB/mariadb-10.4.8/repo/ubuntu {{ ansible_distribution_release }} main"
+    - "deb http://downloads.mariadb.com/MariaDB/mariadb-10.5/repo/ubuntu {{ ansible_distribution_release }} main"
     - "deb http://downloads.mariadb.com/Tools/ubuntu {{ ansible_distribution_release }} main"
 
 - name: Force update of Apt cache
@@ -83,24 +84,20 @@
 
 ########
 # Cluster Configuration
-
 - name: Cluster configuration
   when: mariadb_cluster_name is defined
   include_tasks: "cluster.yml"
+
+########
+# Standalone Configuration
+- name: Standalone configuration
+  when: mariadb_cluster_name is not defined
+  include_tasks: "standalone.yml"
 
 ########
 # Save the firewall rules
 
 - name: Save firewall rules
   include_tasks: "{{ playbook_dir }}/lib/firewall-save.yml"
-
-########
-# Service Status
-
-- name: Enable MariaDB Services
-  service:
-    name: mariadb
-    state: "{{ mariadb_service_state }}"
-    enabled: "{{ mariadb_service_enabled }}"
 
 ...

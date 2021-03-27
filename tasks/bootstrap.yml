@@ -1,0 +1,30 @@
+---
+
+- name: Current bootstrap host
+  debug:
+    msg: "{{ bootstrap_host }}"
+
+- name: Bootstrap - Start new cluster instance
+  shell: "hostname && galera_new_cluster"
+  register: new_cluster
+  ignore_errors: true
+  when: "instance_running == false"
+  delegate_to: "{{ bootstrap_host }}"
+  delegate_facts: true
+  run_once: true
+
+- name: Bootstrap - Running instance check
+  set_fact:
+    instance_running: true
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  when:
+    - "new_cluster is defined"
+    - "new_cluster.rc == 0"
+  loop: "{{ play_hosts }}"
+
+- name: Bootstrap - Instance state
+  debug:
+    msg: "{{ instance_running }}"
+
+...

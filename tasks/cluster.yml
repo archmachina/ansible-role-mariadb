@@ -51,9 +51,6 @@
     destination_port: 4568
   with_items: "{{ mariadb_cluster_nets }}"
 
-########
-# Cluster configuration
-
 - name: Database configuration
   template:
     src: dbcluster.cnf.j2
@@ -70,5 +67,68 @@
   when: db_config.changed
   set_fact:
     mariadb_service_state: "restarted"
+
+# Make sure the services are started, if possible
+- name: Enable MariaDB Services
+  throttle: 1
+  service:
+    name: mariadb
+    state: "started"
+    enabled: "{{ mariadb_service_enabled }}"
+  ignore_errors: yes
+  register: mariadb_start_attempt
+
+- name: service state
+  debug:
+    var: mariadb_start_attempt
+
+- name: Default for instance state
+  set_fact:
+    instance_running: false
+
+# Check if any host has a running instance
+- name: Running instance check
+  set_fact:
+    instance_running: true
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  when: "mariadb_start_attempt.failed == false"
+  loop: "{{ play_hosts }}"
+
+- name: Instance state
+  debug:
+    msg: "{{ instance_running }}"
+
+- name: Bootstrap cluster
+  when: "instance_running == false"
+  include_tasks: "bootstrap.yml"
+  loop: "{{ play_hosts }}"
+  loop_control:
+    loop_var: bootstrap_host
+
+- name: Enable MariaDB Services
+  service:
+    name: mariadb
+    state: "started"
+    enabled: "{{ mariadb_service_enabled }}"
+  loop_control:
+    pause: 10
+  loop: "{{ play_hosts }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  run_once: true
+
+# Restart services, if required
+- name: Enable MariaDB Services
+  service:
+    name: mariadb
+    state: "{{ mariadb_service_state }}"
+    enabled: "{{ mariadb_service_enabled }}"
+  loop_control:
+    pause: 10
+  loop: "{{ play_hosts }}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  run_once: true
 
 ...
