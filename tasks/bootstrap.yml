@@ -18,9 +18,7 @@
     instance_running: true
   delegate_to: "{{ item }}"
   delegate_facts: true
-  when:
-    - "new_cluster is defined"
-    - "new_cluster.rc == 0"
+  when: "new_cluster is defined and new_cluster.rc == 0"
   loop: "{{ play_hosts }}"
 
 - name: Bootstrap - Instance state
