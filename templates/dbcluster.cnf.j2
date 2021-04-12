@@ -24,4 +24,5 @@ wsrep_sst_method=rsync
 wsrep_node_address="{{ mariadb_node_address }}"
 wsrep_node_name="{{ mariadb_node_name }}"
 
-
+# Online Schema Upgrade method
+wsrep_OSU_method={{ mariadb_wsrep_osu_method }}
