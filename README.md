@@ -1,3 +1,3 @@
 # ansible-role-mariadb
 
-[![Latest](https://github.com/noveris-inf/ansible-role-mariadb/workflows/Latest/badge.svg)](https://github.com/noveris-inf/ansible-role-mariadb/actions?query=workflow%3ALatest) [![Versioned](https://github.com/noveris-inf/ansible-role-mariadb/workflows/Versioned/badge.svg)](https://github.com/noveris-inf/ansible-role-mariadb/actions?query=workflow%3AVersioned)
+[![latest](https://github.com/archmachina/ansible-role-mariadb/workflows/latest/badge.svg)](https://github.com/archmachina/ansible-role-mariadb/actions?query=workflow%3Alatest)
